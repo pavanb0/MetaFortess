@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-// import css file
-import './login.css';
-
-import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import { Autocomplete } from '@mui/material';
 import Button from '@mui/material/Button';
 
-function Login() {
+function Signup() {
+    const [name, setname] = useState(''); 
     const [email, setemail] = useState('');
     const [password, setPassword] = useState('');
     console.log(email);
     console.log(password);
-
+    console.log(name);
     return (
      
             <div style={{ display: 'flex',
@@ -27,15 +23,16 @@ function Login() {
                 <div style={{ display: 'flex', flexDirection: 'column',
                 marginTop: '-100px'
                 , gap: '16px' }}>
-                    <h1 style={{ color: '#1976d2' }}>Login To Metafortess</h1>
+                    <h1 style={{ color: '#1976d2' }}>Signup To Metafortess</h1>
+                    <TextField id="name" label="Enter Name" variant="outlined" type="text" style={{width:'450px'}} value={name}onChange={(e)=>{setname(e.target.value)}}/>
                     <TextField id="email" label="Enter Email" variant="outlined" type="email" style={{width:'450px'}} value={email}onChange={(e)=>{setemail(e.target.value)}}/>
                     <TextField id="password" label="password" variant="outlined" type="password" value={password}  style={{width:'450px'}} onChange={(e)=>{setPassword(e.target.value)}}/>
-                    <Button variant="outlined" style={{width:"450px"}}>Login</Button>
-                    <p > don't have an account? <a href="/signup">Sign Up</a> </p>
+                    <Button variant="outlined" style={{width:"450px"}}>Signup</Button>
+                    <p > have an account? <a href="/Login">Login</a> </p>
                     </div>
             </div>
 
     );
 }
 
-export default Login;
+export default Signup;
