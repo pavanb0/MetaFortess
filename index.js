@@ -5,8 +5,12 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs');
 const logs = require('./logs');
+const crypto = require('crypto'); 
 
-
+const sessions=()=>{
+    const session = crypto.randomBytes(32).toString('hex');
+    return session;
+}
 
 const app = express();
 const port = 3030;
@@ -25,6 +29,8 @@ const db = new sqlite3.Database('./Meta.db', (err) => {
 });
 
 
+// create table sessions (email text, session text);
+
 app.get('/alldata', (req, res) => {
     db.all('SELECT * FROM users', (err, rows) => {
         if (err) {
@@ -42,14 +48,72 @@ app.get('/alldata', (req, res) => {
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
-    db.all('SELECT * FROM users WHERE email = ?', email, (err, row) => {
-        if (err){
-
+    // checking if the email exists in the database
+    db.get( 'SELECT * FROM users WHERE email = ?', email,(err,row)=>{
+        err ? console.log(err) : console.log(row)
+        if (err) {
+            console.error('Error querying database:', err.message);
+            logs.addlogs('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
         }
+        if (!row) {
+            // Email doesn't exist
+            logs.addlogs('Email does not exist');
+            return res.status(401).json({ error: 'Incorrect email or password' });
+            
+        }
+        // Email exists
+        // Compare the password given by the user and the password in the database
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+                logs.addlogs('Error comparing passwords:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            if (!result) {
+                // Passwords don't match
+                logs.addlogs('Passwords do not match');
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            // Passwords match
+            // Create a new session for the user
+            const session = sessions();
+            db.run('INSERT INTO sessions (email, session) VALUES (?, ?)', [email, session], (err) => {
+                if (err) {
+                    console.error('Error creating session:', err.message);
+                    logs.addlogs('Error creating session:', err.message);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+                // Send the session back to the user in a cookie
+                res.cookie('session', session, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    maxAge: 3600000*24 // 24 hour
+                });
+                logs.addlogs('User logged in successfully');
+                return res.status(200).json({ message: 'User logged in successfully' });
+            });
+        });
+
+    })
+
+});
+
+app.get('/logout', (req, res) => {
+    const { session } = req.cookies;
+    // Delete the session from the database
+    db.run('DELETE FROM sessions WHERE session = ?', session, (err) => {
+        if (err) {
+            console.error('Error deleting session:', err.message);
+            logs.addlogs('Error deleting session:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        // Remove the session cookie
+        res.clearCookie('session');
+        logs.addlogs('User logged out successfully');
+        return res.status(200).json({ message: 'User logged out successfully' });
     });
-
-
-
 });
 
 
@@ -92,7 +156,7 @@ app.post('/signup', (req, res) => {
                 return res.status(500).json({ error: 'Internal Server Error' });
                 logs.addlogs('Error inserting user:', err.message);
             }
-  
+                logs.addlogs('User registered successfully'+name);
               return res.status(201).json({ message: 'User registered successfully' });
             }
           );
