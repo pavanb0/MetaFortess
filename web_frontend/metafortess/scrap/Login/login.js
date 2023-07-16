@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 // import css file
 import './login.css';
 
-import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import { Autocomplete } from '@mui/material';
 import Button from '@mui/material/Button';
 
 function Login() {
