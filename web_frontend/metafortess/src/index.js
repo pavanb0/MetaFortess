@@ -5,7 +5,10 @@ import reportWebVitals from './reportWebVitals';
 import Home from './screens/Home';
 import Signup from './screens/Signup';
 import Login from './screens/login'; // Make sure the filename is "Login.js" with a capital "L".
+import Forgotpass from './screens/forgotpass';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+
 
 const App = () => {
   return (
@@ -14,6 +17,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgotpass" element={<Forgotpass />} />
       </Routes>
     </BrowserRouter>
   );

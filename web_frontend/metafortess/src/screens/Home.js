@@ -24,6 +24,8 @@ const Home = () => {
 return(
     <div>
         <h1>hello</h1>
+        login
+        <a href="http://localhost:3000/login">login</a>
     </div>
 )
 };

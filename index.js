@@ -6,7 +6,7 @@ const cors = require('cors');
 const fs = require('fs');
 const logs = require('./logs');
 const crypto = require('crypto'); 
-
+const {v4: uuidv4} = require('uuid');
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
     return session;
@@ -45,6 +45,18 @@ app.get('/alldata', (req, res) => {
     )
 
 });
+
+app.get('/sendotp',(req,res)=>{
+    const {email} = req.body;
+    // generate otp 4 digit
+    console.log(email);
+    const otp = uuidv4().slice(0,4);
+    setTimeout(()=>{
+    res.status(200).json({message:"OTP sent successfully"});
+    },1000)
+})
+
+
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;

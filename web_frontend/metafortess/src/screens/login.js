@@ -68,7 +68,10 @@ function Login() {
                     <TextField id="email" label="Enter Email" variant="outlined" type="email" style={{ width: '450px' }} value={email} onChange={(e) => { setemail(e.target.value) }} />
                     <TextField id="password" label="password" variant="outlined" type="password" value={password} style={{ width: '450px' }} onChange={(e) => { setPassword(e.target.value) }} />
                     <Button type='submit' variant="outlined" style={{ width: "450px" }}>Login</Button>
-                    <p > don't have an account?  <Link to='/signup'> Sign up</Link> </p>
+                    <div >
+                    <p style={{margin:'6px'}} > <Link to='/forgotpass'> Forgot password?</Link> </p>
+                    <p style={{margin:'6px'}}> don't have an account?  <Link to='/signup'> Sign up</Link> </p>
+                    </div>
                 </div>
             </form>
         </div>
