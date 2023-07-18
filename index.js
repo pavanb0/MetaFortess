@@ -7,6 +7,9 @@ const fs = require('fs');
 const logs = require('./logs');
 const crypto = require('crypto'); 
 const {v4: uuidv4} = require('uuid');
+const otpHandler = require( './otphandler')
+const nodeMailer = require('nodemailer');
+
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
     return session;
@@ -29,6 +32,7 @@ const db = new sqlite3.Database('./Meta.db', (err) => {
 });
 
 
+
 // create table sessions (email text, session text);
 
 app.get('/alldata', (req, res) => {
@@ -46,16 +50,131 @@ app.get('/alldata', (req, res) => {
 
 });
 
-app.get('/sendotp',(req,res)=>{
-    const {email} = req.body;
-    // generate otp 4 digit
-    console.log(email);
-    const otp = uuidv4().slice(0,4);
-    setTimeout(()=>{
-    res.status(200).json({message:"OTP sent successfully"});
-    },1000)
-})
+function clearotpfromdb(email){
+    setTimeout(() => {
 
+    db.run('DELETE FROM OTP WHERE email = ?', email, (err) => {
+        if (err) {
+            console.error('Error deleting otp:', err.message);
+            logs.addlogs('Error deleting otp:', err.message);
+        }
+        console.log('OTP deleted successfully');
+        logs.addlogs('OTP deleted successfully');
+    });
+}, 1000*60);
+}
+
+
+
+app.post('/sendotp',(req,res)=>{
+    const {email}=req.body;
+    console.log('email');
+    // res.status(200);
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+            logs.addlogs('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            // Email doesn't exist
+            logs.addlogs('Email does not exist');
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        
+        // 4 digot otp
+        const otp = Math.floor(1000 + Math.random() * 9000);
+        const transporter = nodeMailer.createTransport(
+            {
+                service:'yourmail',
+                port:587,
+                secure:false,
+                auth:{
+                    user:'yourmail',
+                    pass:''
+                },
+                
+            }
+        )
+        const mailOptions = {
+            from:'yourmail',
+            to:email,
+            subject:'OTP for resetting password',
+            text:`Your OTP is ${otp}`
+        }
+        transporter.sendMail(mailOptions,(err,info)=>{
+            if(err){
+                console.log(err);
+                logs.addlogs(err);
+                return res.status(500).json({error:'Internal Server Error'});
+            }
+            res.status(200).json({message:'OTP sent successfully'});
+            // insert otp with email in otp table
+            db.run('INSERT INTO OTP (email, otp) VALUES (?, ?)', [email, otp], (err) => {
+                if (err) {
+                    console.error('Error creating session:', err.message);
+                    logs.addlogs('Error creating session:', err.message);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+                console.log('OTP created successfully');
+                logs.addlogs('OTP created successfully');
+                clearotpfromdb(email);
+            });
+
+
+            console.log('Email sent: ' + info.response);
+            logs.addlogs('Email sent: ' + info.response);
+        })
+
+    })
+}
+
+)
+
+
+
+app.post('/verifyotp',(req,res)=>{
+    const {email,otp,password} = req.body;
+    console.log(email,password,otp);
+    db.get('SELECT * FROM OTP WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+            logs.addlogs('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            // Email doesn't exist
+            logs.addlogs('Email does not exist');
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        if(row.otp!=otp){
+            logs.addlogs('Incorrect OTP');
+            return res.status(401).json({ error: 'Incorrect OTP' });
+        }
+        // Email exists
+        // Compare the password given by the user and the password in the database
+        bcrypt.hash(password, 10, (err, hash) => {
+            if (err) {
+                console.error('Error hashing password:', err.message);
+                logs.addlogs('Error hashing password:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            // Update the password in the database
+            db.run('UPDATE users SET password = ? WHERE email = ?', [hash, email], (err) => {
+                if (err) {
+                    console.error('Error updating password:', err.message);
+                    logs.addlogs('Error updating password:', err.message);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+                console.log('Password updated successfully');
+                logs.addlogs('Password updated successfully');
+                res.status(200).json({ message: 'Password updated successfully' });
+            });
+        });
+    }
+    )
+
+})
 
 
 app.post('/login', (req, res) => {
