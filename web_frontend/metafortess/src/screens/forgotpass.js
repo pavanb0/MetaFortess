@@ -42,7 +42,8 @@ function ForgotPass() {
         setOtp('');
         setPassword('');
         setError(''); // Clear any previous errors
-        alert('Password reset successful. You can now log in with your new password.');
+        // alert('Password reset successful. You can now log in with your new password.');
+        <Link to="/login"></Link>
       }
     } catch (error) {
       setError('Failed to reset password. Please make sure the OTP is correct and try again.');
@@ -74,7 +75,7 @@ function ForgotPass() {
             alignItems: 'center',
             alignContent: 'center',
             flexDirection: 'column',
-
+            gap: '20px'
           }}>
             <TextField
               id="email"
@@ -102,6 +103,7 @@ function ForgotPass() {
             alignItems: 'center',
             alignContent: 'center',
             flexDirection: 'column',
+            gap: '20px'
           }}>
             <MuiOtpInput
               id="otp"

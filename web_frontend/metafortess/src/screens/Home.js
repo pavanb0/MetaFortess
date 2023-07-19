@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import QRCode from 'qrcode.react';
-import { getLocalIP } from '../Utils/Utils'; // Create a utility function to get the local IP address
-
+import React from 'react';
+import { Link } from 'react-router-dom';
 const Home = () => {
 //   const [ipAddress, setIPAddress] = useState('');
 
@@ -25,8 +23,8 @@ return(
     <div>
         <h1>hello</h1>
         login
-        <a href="http://localhost:3000/login">login</a>
-    </div>
+        <Link to="/login">Login</Link>
+        </div>
 )
 };
 

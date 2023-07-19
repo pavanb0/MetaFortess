@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const {v4: uuidv4} = require('uuid');
 const otpHandler = require( './otphandler')
 const nodeMailer = require('nodemailer');
+const ip = otpHandler.getIpAddress();
 
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
@@ -84,15 +85,20 @@ app.post('/sendotp',(req,res)=>{
         
         // 4 digot otp
         const otp = Math.floor(1000 + Math.random() * 9000);
+        console.log(otp);
         const transporter = nodeMailer.createTransport(
             {
-                service:'yourmail',
+                service:'gmail',
                 port:587,
                 secure:false,
                 auth:{
-                    user:'yourmail',
+                    user:'',
                     pass:''
                 },
+                tls:{
+                    rejectUnauthorized:false
+                }
+
                 
             }
         )
@@ -102,12 +108,12 @@ app.post('/sendotp',(req,res)=>{
             subject:'OTP for resetting password',
             text:`Your OTP is ${otp}`
         }
-        transporter.sendMail(mailOptions,(err,info)=>{
-            if(err){
-                console.log(err);
-                logs.addlogs(err);
-                return res.status(500).json({error:'Internal Server Error'});
-            }
+        // transporter.sendMail(mailOptions,(err,info)=>{
+        //     if(err){
+        //         console.log(err);
+        //         logs.addlogs(err);
+        //         return res.status(500).json({error:'Internal Server Error'});
+        //     }
             res.status(200).json({message:'OTP sent successfully'});
             // insert otp with email in otp table
             db.run('INSERT INTO OTP (email, otp) VALUES (?, ?)', [email, otp], (err) => {
@@ -122,9 +128,9 @@ app.post('/sendotp',(req,res)=>{
             });
 
 
-            console.log('Email sent: ' + info.response);
-            logs.addlogs('Email sent: ' + info.response);
-        })
+            // console.log('Email sent: ' + info.response);
+            // logs.addlogs('Email sent: ' + info.response);
+        // })
 
     })
 }
@@ -180,6 +186,7 @@ app.post('/verifyotp',(req,res)=>{
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
     // checking if the email exists in the database
+    console.log(email,password);
     db.get( 'SELECT * FROM users WHERE email = ?', email,(err,row)=>{
         err ? console.log(err) : console.log(row)
         if (err) {
@@ -254,7 +261,7 @@ app.get('/logout', (req, res) => {
 // POST /signup
 app.post('/signup', (req, res) => {
     const { name, email, password } = req.body;
-  
+  console.log(name,email,password);
     // Check if the email already exists in the database
     db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
       if (err) {
@@ -296,9 +303,9 @@ app.post('/signup', (req, res) => {
     });
   });
   
-
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+  
+  app.listen(port,String(ip), () => {
+    console.log(`Server running on http://${ip}:${port}`);
   });
 
 
