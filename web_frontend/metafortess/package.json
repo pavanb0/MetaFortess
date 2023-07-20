@@ -10,6 +10,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.4.0",
+    "child_process": "^1.0.2",
     "ip": "^1.1.8",
     "mdb-react-ui-kit": "^6.1.0",
     "mui-one-time-password-input": "^1.1.2",

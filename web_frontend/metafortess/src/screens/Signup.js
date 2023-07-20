@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
+// import {useHistory} from 'react-router';
 import axios from 'axios';
+const localip = require('../localip')
+const { useNavigate } = require('react-router-dom');
 
 function Signup() {
     const [name, setname] = useState('');
@@ -10,6 +13,8 @@ function Signup() {
     const [password, setPassword] = useState('');
     const [displaynone, setdisplaynone] = useState(false);
     const display = displaynone ? 'block' : 'none';
+    const ip = localip.sysip;
+    const history = useNavigate();
 
     const handleSignupSubmit = (e) => {
         // console.log("here")
@@ -18,10 +23,11 @@ function Signup() {
             alert('Please fill all the fields');
             return;
         }
-        axios.post('http://192.168.0.104:3030/signup', { name, email, password })
+        axios.post(`http://${ip}:3030/signup`, { name, email, password })
             .then((res) => {
                 console.log(res.data);
-                alert(res.data.message);
+                // alert(res.data.message);
+                history('/login');
             }
             ).catch((err) => {
                 if (err.response && err.response.status === 409) {
@@ -75,7 +81,7 @@ function Signup() {
                 gap: '16px'
             }}
             >
-                <img src="https://www.pngkey.com/png/full/114-1149878_setting-user-avatar-in-specific-size-without-breaking.png" alt="avatar" style={{ width: '100px', height: '100px' }} />
+                {/* <img src="https://www.pngkey.com/png/full/114-1149878_setting-user-avatar-in-specific-size-without-breaking.png" alt="avatar" style={{ width: '100px', height: '100px' }} /> */}
                 <h1 style={{ display: display }} > this email already exists</h1>
             </div>
             <form onSubmit={handleSignupSubmit}>

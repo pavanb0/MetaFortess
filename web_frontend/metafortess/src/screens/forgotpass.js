@@ -3,8 +3,8 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { MuiOtpInput } from 'mui-one-time-password-input';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-
+import {  useNavigate} from 'react-router-dom';
+const localip = require('../localip')
 
 
 function ForgotPass() {
@@ -13,13 +13,14 @@ function ForgotPass() {
   const [password, setPassword] = useState('');
   const [step, setStep] = useState(1); // Step 1: Enter email, Step 2: Enter OTP and New Password
   const [error, setError] = useState('');
-
+  const ip = localip.sysip
+  const history = useNavigate();
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3030/sendotp', { email });
+      const response = await axios.post(`http://${ip}:3030/sendotp`, { email });
 
       if (response.status === 200) {
         setStep(2); // Move to step 2: Enter OTP and New Password
@@ -34,7 +35,7 @@ function ForgotPass() {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3030/verifyotp', { email, otp, password });
+      const response = await axios.post(`http://${ip}:3030/verifyotp`, { email, otp, password });
 
       if (response.status === 200) {
         setStep(1); // Reset to step 1: Enter email
@@ -43,7 +44,7 @@ function ForgotPass() {
         setPassword('');
         setError(''); // Clear any previous errors
         // alert('Password reset successful. You can now log in with your new password.');
-        <Link to="/login"></Link>
+        history('/login');
       }
     } catch (error) {
       setError('Failed to reset password. Please make sure the OTP is correct and try again.');

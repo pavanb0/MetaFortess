@@ -9,7 +9,10 @@ const crypto = require('crypto');
 const {v4: uuidv4} = require('uuid');
 const otpHandler = require( './otphandler')
 const nodeMailer = require('nodemailer');
+const cookieParser = require('cookie-parser');
 const ip = otpHandler.getIpAddress();
+
+
 
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
@@ -19,11 +22,18 @@ const sessions=()=>{
 const app = express();
 const port = 3030;
 
-app.use(cors());
+app.use(cors(
+    {
+        origin: 'http://192.168.0.104:3000',
+        credentials: true
+    }
+));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
-  
+app.use(cookieParser())  
+
+
 const db = new sqlite3.Database('./Meta.db', (err) => {
     if (err) {
         console.error(err.message);
@@ -34,10 +44,49 @@ const db = new sqlite3.Database('./Meta.db', (err) => {
 
 
 
-// create table sessions (email text, session text);
+
+app.get('/gallary',(req,res)=>{
+    console.log('hello');
+    const sessionid = req.cookies.session;
+    console.log (sessionid);
+    // db.get('SELECT * FROM sessions WHERE session = ?', sessionid, (err, row) => {
+    //     if (err) {
+    //         console.error('Error querying database:', err.message);
+    //         logs.addlogs('Error querying database:', err.message);
+    //         return res.status(500).json({ error: 'Internal Server Error' });
+    //     }
+    //     if (!row) {
+    //         // Session doesn't exist
+    //         logs.addlogs('Session does not exist');
+    //         return res.status(401).json({ error: 'Unauthorized' });
+    //     }
+    //     // Session exists
+    //     // Get the user's email from the sessions table
+    //     const { email } = row;
+    //     // Get the user's data from the users table
+    //     db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+    //         if (err) {
+    //             console.error('Error querying database:', err.message);
+    //             logs.addlogs('Error querying database:', err.message);
+    //             return res.status(500).json({ error: 'Internal Server Error' });
+    //         }
+    //         if (!row) {
+    //             // Email doesn't exist
+    //             logs.addlogs('Email does not exist');
+    //             return res.status(401).json({ error: 'Unauthorized' });
+    //         }
+    //         // Email exists
+    //         // Send the user's data to the client
+    //         res.status(200).json({ name: row.name, email: row.email });
+    //     });
+    // })
+})
+
+
+
 
 app.get('/alldata', (req, res) => {
-    db.all('SELECT * FROM users', (err, rows) => {
+    db.all('SELECT * FROM sessions ', (err, rows) => {
         if (err) {
             console.log(err);
             logs.addlogs(err);
@@ -225,7 +274,7 @@ app.post('/login', (req, res) => {
                 // Send the session back to the user in a cookie
                 res.cookie('session', session, {
                     httpOnly: true,
-                    secure: true,
+                    secure: false,
                     sameSite: 'strict',
                     maxAge: 3600000*24 // 24 hour
                 });
