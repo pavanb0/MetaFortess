@@ -1,13 +1,13 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 // import css file
 import './login.css';
 
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import { Link,useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 const localip = require('../localip')
-
+const sessios = require('./sessions');
 
 function Login() {
     const [email, setemail] = useState('');
@@ -22,24 +22,31 @@ function Login() {
             alert('Please fill all the fields');
             return;
         }
-        axios.post(`http://${localip.sysip}:3030/login`, { email, password })
+        axios.post(`http://${localip.sysip}:3030/login`, { email, password }, { withCredentials: true })
             .then((res) => {
-                console.log(res.data);
+                // i am getting cookie here set-cookie 
+                // console.log(res.headers['set-cookie'])
+                // console.log(res.headers['set-cookie'][0] + "cookie");
+                if(res.data.message === "User logged in successfully"){
+                    // sessios.setCookie(res.headers['set-cookie'][0]);
+                   sessios.email = email;
+                     sessios.password = password;
+                    history('/gallary');
+                    
+                }
                 // alert(res.data.message);
-                // localStorage.setItem('token', res.data.token);
-                history('/gallary');
+                // history('/gallary')
+
             }
             ).catch((err) => {
                 console.log(err);
-                
+
                 setloginerror(true);
                 setTimeout(() => {
                     setloginerror(false);
-                }
-                    , 3000)
+                }, 3000)
+            })
 
-            }
-            )   
     };
     return (
 
@@ -55,10 +62,10 @@ function Login() {
             flexDirection: 'column',
             gap: '80px',
 
-            }}>
+        }}>
             <div>
                 {/* <img src="https://www.pngkey.com/png/full/114-1149878_setting-user-avatar-in-specific-size-without-breaking.png" alt="avatar" style={{ width: '100px', height: '100px' }} /> */}
-                <h1 style={{display:display}}> Error in login </h1>
+                <h1 style={{ display: display }}> Error in login </h1>
             </div>
 
             <form onSubmit={handleLoginSubmit}>
@@ -71,10 +78,10 @@ function Login() {
                     <TextField id="email" label="Enter Email" variant="outlined" type="email" style={{ width: '450px' }} value={email} onChange={(e) => { setemail(e.target.value) }} />
                     <TextField id="password" label="password" variant="outlined" type="password" value={password} style={{ width: '450px' }} onChange={(e) => { setPassword(e.target.value) }} />
                     <Button type='submit' variant="outlined" style={{ width: "450px" }}>Login</Button>
-                    
+
                     <div >
-                    <p style={{margin:'6px'}} > <Link to='/forgotpass'> Forgot password?</Link> </p>
-                    <p style={{margin:'6px'}}> don't have an account?  <Link to='/signup'> Sign up</Link> </p>
+                        <p style={{ margin: '6px' }} > <Link to='/forgotpass'> Forgot password?</Link> </p>
+                        <p style={{ margin: '6px' }}> don't have an account?  <Link to='/signup'> Sign up</Link> </p>
                     </div>
                 </div>
             </form>

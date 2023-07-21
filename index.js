@@ -11,13 +11,15 @@ const otpHandler = require( './otphandler')
 const nodeMailer = require('nodemailer');
 const cookieParser = require('cookie-parser');
 const ip = otpHandler.getIpAddress();
-
+const session = require('express-session');
 
 
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
     return session;
 }
+
+
 
 const app = express();
 const port = 3030;
@@ -43,46 +45,122 @@ const db = new sqlite3.Database('./Meta.db', (err) => {
 });
 
 
+function isuserindb(uname,pass)
+{
+    db.get('SELECT * FROM users WHERE username = ?', uname, (err, row) => {
+        if (err) {
+            return false;        
+        }
+        if (!row) {
+            return false;
+        }
+        bcrypt.compare(pass, row.password, (err, result) => {
+            if (err) {
+                return false;
+            }
+            if (!result) {
+                // Passwords don't match
+                return false;
+            }
+            return true;
+        });
+        });
+
+    }
+    
 
 
 app.get('/gallary',(req,res)=>{
-    console.log('hello');
-    const sessionid = req.cookies.session;
-    console.log (sessionid);
-    // db.get('SELECT * FROM sessions WHERE session = ?', sessionid, (err, row) => {
-    //     if (err) {
-    //         console.error('Error querying database:', err.message);
-    //         logs.addlogs('Error querying database:', err.message);
-    //         return res.status(500).json({ error: 'Internal Server Error' });
-    //     }
-    //     if (!row) {
-    //         // Session doesn't exist
-    //         logs.addlogs('Session does not exist');
-    //         return res.status(401).json({ error: 'Unauthorized' });
-    //     }
-    //     // Session exists
-    //     // Get the user's email from the sessions table
-    //     const { email } = row;
-    //     // Get the user's data from the users table
-    //     db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
-    //         if (err) {
-    //             console.error('Error querying database:', err.message);
-    //             logs.addlogs('Error querying database:', err.message);
-    //             return res.status(500).json({ error: 'Internal Server Error' });
-    //         }
-    //         if (!row) {
-    //             // Email doesn't exist
-    //             logs.addlogs('Email does not exist');
-    //             return res.status(401).json({ error: 'Unauthorized' });
-    //         }
-    //         // Email exists
-    //         // Send the user's data to the client
-    //         res.status(200).json({ name: row.name, email: row.email });
-    //     });
-    // })
+
+    // const uname = req.headers['uname'];
+    const email = req.headers['email'];
+    const password = req.headers['password'];
+    console.log(email,password,'hello');
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+        }
+        if (!row) {
+            // Email doesn't exist
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        // Email exists
+        // Compare the password given by the user and the password in the database
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+            }
+            if (!result) {
+                // Passwords don't match
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            // Passwords match
+            console.log('Passwords match');
+            res.status(200).json({ name: row.name });
+        });
+    });
+    
+   
 })
 
 
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    // checking if the email exists in the database
+    console.log(email,password);
+    db.get( 'SELECT * FROM users WHERE email = ?', email,(err,row)=>{
+        err ? console.log(err) : console.log(row)
+        if (err) {
+            console.error('Error querying database:', err.message);
+            logs.addlogs('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            // Email doesn't exist
+            logs.addlogs('Email does not exist');
+            return res.status(401).json({ error: 'Incorrect email or password' });
+            
+        }
+        // Email exists
+        // Compare the password given by the user and the password in the database
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+                logs.addlogs('Error comparing passwords:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            if (!result) {
+                // Passwords don't match
+                logs.addlogs('Passwords do not match');
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            // Passwords match
+            // Create a new session for the user
+            const session = sessions();
+            db.run('INSERT INTO sessions (email, session) VALUES (?, ?)', [email, session], (err) => {
+                if (err) {
+                    console.error('Error creating session:', err.message);
+                    logs.addlogs('Error creating session:', err.message);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+                // Send the session back to the user in a cookie
+                res.cookie('session', session, {
+                    httpOnly: true,
+                    secure: false,
+                    sameSite: 'strict',
+                    maxAge: 3600000*24 // 24 hour
+                });
+                
+                // const resmsg = { 'session':session}
+                // res.send(resmsg);
+                logs.addlogs('User logged in successfully');
+                return res.status(200).json({ message: 'User logged in successfully' });
+            });
+        });
+
+    })
+
+});
 
 
 app.get('/alldata', (req, res) => {
@@ -232,60 +310,6 @@ app.post('/verifyotp',(req,res)=>{
 })
 
 
-app.post('/login', (req, res) => {
-    const { email, password } = req.body;
-    // checking if the email exists in the database
-    console.log(email,password);
-    db.get( 'SELECT * FROM users WHERE email = ?', email,(err,row)=>{
-        err ? console.log(err) : console.log(row)
-        if (err) {
-            console.error('Error querying database:', err.message);
-            logs.addlogs('Error querying database:', err.message);
-            return res.status(500).json({ error: 'Internal Server Error' });
-        }
-        if (!row) {
-            // Email doesn't exist
-            logs.addlogs('Email does not exist');
-            return res.status(401).json({ error: 'Incorrect email or password' });
-            
-        }
-        // Email exists
-        // Compare the password given by the user and the password in the database
-        bcrypt.compare(password, row.password, (err, result) => {
-            if (err) {
-                console.error('Error comparing passwords:', err.message);
-                logs.addlogs('Error comparing passwords:', err.message);
-                return res.status(500).json({ error: 'Internal Server Error' });
-            }
-            if (!result) {
-                // Passwords don't match
-                logs.addlogs('Passwords do not match');
-                return res.status(401).json({ error: 'Incorrect email or password' });
-            }
-            // Passwords match
-            // Create a new session for the user
-            const session = sessions();
-            db.run('INSERT INTO sessions (email, session) VALUES (?, ?)', [email, session], (err) => {
-                if (err) {
-                    console.error('Error creating session:', err.message);
-                    logs.addlogs('Error creating session:', err.message);
-                    return res.status(500).json({ error: 'Internal Server Error' });
-                }
-                // Send the session back to the user in a cookie
-                res.cookie('session', session, {
-                    httpOnly: true,
-                    secure: false,
-                    sameSite: 'strict',
-                    maxAge: 3600000*24 // 24 hour
-                });
-                logs.addlogs('User logged in successfully');
-                return res.status(200).json({ message: 'User logged in successfully' });
-            });
-        });
-
-    })
-
-});
 
 app.get('/logout', (req, res) => {
     const { session } = req.cookies;

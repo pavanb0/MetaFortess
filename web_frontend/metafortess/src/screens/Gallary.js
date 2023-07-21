@@ -2,22 +2,26 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 const localip = require('../localip');
 const ip = localip.sysip;
-
+const sessions = require('./sessions');
 function Gallery() {
+  
+  const headers = { 
+    'email':sessions.email,
+    'password':sessions.password,
+  }
   const [userName, setUserName] = useState('');
-
   useEffect(() => {
-    // Make the API call to get the user's data
-    axios
-      .get(`http://${ip}:3030/gallary`, { withCredentials: true }) // Make sure to include withCredentials to send the cookies
+    axios.get(`http://${ip}:3030/gallary`,{headers} )
       .then((res) => {
-        // Assuming the backend returns the user's name as part of the response data
+        console.log(res);
         setUserName(res.data.name);
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
-  }, []);
+      }
+      ).catch((err) => {
+        console.log(err);
+        
+  });
+  },[]);
+
 
   return (
     <div>
