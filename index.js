@@ -41,9 +41,32 @@ const db = new sqlite3.Database('./Meta.db', (err) => {
         console.error(err.message);
     }
     console.log('Connected to the Meta database.');
-    logs.addlogs('Connected to the Meta database.');
+    // logs.addlogs('Connected to the Meta database.');
 });
 
+
+function createuserdir(email){
+   
+
+    fs.mkdir(`./UserData/${email}/images`, (err) => {
+        if (err) {
+            console.error(err);
+        }
+        console.log('Directory created successfully');
+    });
+    fs.mkdir(`./UserData/${email}/videos`, (err) => {
+        if (err) {
+            console.error(err);
+        }
+        console.log('Directory created successfully');
+    });
+    fs.mkdir(`./UserData/${email}/files`, (err) => {
+        if (err) {
+            console.error(err);
+        }
+        console.log('Directory created successfully');
+    });
+}
 
 function isuserindb(uname,pass)
 {
@@ -365,10 +388,22 @@ app.post('/signup', (req, res) => {
               if (err) {
                 console.error('Error inserting user:', err.message);
                 return res.status(500).json({ error: 'Internal Server Error' });
-                logs.addlogs('Error inserting user:', err.message);
+
             }
                 logs.addlogs('User registered successfully'+name);
-              return res.status(201).json({ message: 'User registered successfully' });
+                try{
+                    fs.mkdir(`./UserData/${email}`, (err) => {
+                        if (err) {
+                            console.error(err);
+                        }
+                        console.log('Directory created successfully');
+                    });
+                    createuserdir(email);
+                    return res.status(201).json({ message: 'User registered successfully' });
+
+                }catch(err){
+                    res.status(500).json({ error: 'Internal Server Error' });
+                }
             }
           );
         });
