@@ -16,7 +16,11 @@ import MoreIcon from '@mui/icons-material/MoreVert';
 import Modal from '@mui/material/Modal';
 import { Button } from '@mui/material';
 import BackupIcon from '@mui/icons-material/Backup';
+import axios from 'axios';
+import LinearProgressWithLabel from '@mui/material/LinearProgress';
+// import CircularProgress from '@mui/material/CircularProgress';
 const sessions = require('./sessions');
+const localip = require('../localip');
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -65,7 +69,9 @@ export default function PrimarySearchAppBar() {
   const [uploadmodal, setuploadmodal] = React.useState(false);
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
+  const [upload, setpload] = React.useState(false);
+  const [uploadprogress, setuploadprogress] = React.useState(0);
+  const [loadingdata,setloadingdata] = React.useState('');
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
     setModal(true);
@@ -102,7 +108,7 @@ export default function PrimarySearchAppBar() {
   // const uploadmodal = (
 
   // )
-  
+
   const renderMobileMenu = (
     <Menu
       anchorEl={mobileMoreAnchorEl}
@@ -119,25 +125,25 @@ export default function PrimarySearchAppBar() {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-    
+
       <MenuItem>
-      <IconButton
-              size="large"
-             onClick={()=>{
-              setuploadmodal(true);
-             }}
-    
-              color="inherit"
-            >
-              <Badge >
-                <BackupIcon />
-              </Badge>
-            </IconButton>
-             
-            
+        <IconButton
+          size="large"
+          onClick={() => {
+            setuploadmodal(true);
+          }}
+
+          color="inherit"
+        >
+          <Badge >
+            <BackupIcon />
+          </Badge>
+        </IconButton>
+
+
         <p>Upload</p>
       </MenuItem>
-    
+
       <MenuItem onClick={handleProfileMenuOpen}>
         <IconButton
           size="large"
@@ -179,6 +185,7 @@ export default function PrimarySearchAppBar() {
   };
 
   const handleupload = () => {
+    const ip = localip.sysip;
     const formData = new FormData();
     selectedFile.forEach((file) => {
       formData.append('file', file);
@@ -187,26 +194,52 @@ export default function PrimarySearchAppBar() {
       'email': sessions.email,
       'password': sessions.password,
     }
-    fetch(`http://localhost:3030/upload`, {
-      method: 'POST',
-      headers: headers,
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        console.log('Success:', result);
+    setpload(true);
+    axios.post(`http://${ip}:3030/upload`, formData, { headers: headers 
+      , 
+        onUploadProgress: (progressEvent) => {
+          const { loaded, total } = progressEvent;
+          let percent = Math.floor((loaded * 100) / total)
+          const loadedmb = Math.floor(loaded/2048);
+          const totalmb = Math.floor(total/2048);
+          setloadingdata(`${loadedmb}mb of ${totalmb}mb | ${percent}%`);
+          setuploadprogress(percent);
+         
+        }
+      }
+
+
+    )
+      .then((response) => {
+        console.log(response);
         setuploadmodal(false);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
+        setpload(false);
+      }).catch((error) => {
+        // console.log(error);
       });
+
+    // fetch(`http://${ip}:3030/upload`, {
+    //   method: 'POST',
+    //   headers: headers,
+    //   body: formData,
+    // })
+    //   .then((response) => response.json())
+    //   .then((result) => {
+    //     console.log('Success:', result);
+    //     setuploadmodal(false);
+    //   })
+    //   .catch((error) => {
+    //     console.error('Error:', error);
+    //   });
   };
-  
+
 
 
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1,position:'sticky',top:0,zIndex:1000,height:'50px' }}
+    
+    >
       <AppBar position="static">
         <Toolbar>
           <IconButton
@@ -244,10 +277,10 @@ export default function PrimarySearchAppBar() {
             </IconButton> */}
             <IconButton
               size="large"
-             onClick={()=>{
-              setuploadmodal(true);
-              
-             }}
+              onClick={() => {
+                setuploadmodal(true);
+
+              }}
               color="inherit"
             >
               <Badge >
@@ -291,102 +324,115 @@ export default function PrimarySearchAppBar() {
               Hello {sessions.user} ! 👋
             </Typography>
             <Typography sx={{ mt: 2 }}>
-               
-              <Button
-              variant="contained"
-              color="error"
-              size="small"
-              sx={{ ml: 2 }}
-              style={{alignItems:'center'}}
 
-              onClick={() => {
-                sessions.email = '';
-                sessions.password = '';
-                window.location.href = '/login';
-              }}>logout</Button>
+              <Button
+                variant="contained"
+                color="error"
+                size="small"
+                sx={{ ml: 2 }}
+                style={{ alignItems: 'center' }}
+
+                onClick={() => {
+                  sessions.email = '';
+                  sessions.password = '';
+                  window.location.href = '/login';
+                }}>logout</Button>
 
             </Typography>
           </Box>
         </Modal>
       )}
-      { uploadmodal && ( // Conditionally render the modal
+      {uploadmodal && ( // Conditionally render the modal
         <Modal open={uploadmodal} onClose={() => setuploadmodal(false)}>
           <Box sx={styl}>
             <Typography variant="h6" component="h2"
-            style={{display:'flex',justifyContent:'center',alignItems:'center'}}
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
-              <Button 
-              variant='outlined'
-              color='inherit'
-              size='medium'
-              style={{
-                display:'flex',
-                justifyContent:'center',
-                alignItems:'center',
-                width:'100%',
-                height:'40px',
-
-              }}
-              onClick={handleupload}
-              >
-              
-            Upload your files to Metafortess
-            </Button>
-
-            </Typography> 
-            <label htmlFor='fileInput' > 
-            <Button 
-              style={
-                {
-                  display:'flex',
-                  justifyContent:'center',
-                  alignItems:'center',
-                  marginTop:'20px',
-                  width:'100%',
-                  height:'100px',
-                }
-              }
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            variant='outlined' color='inherit' size='medium' component="label">
-              Choose your files
-              <input
-                type="file"
-                name="file"
-                id="file"
-                onChange={handleFileInputChange}
-                class="inputfile"
-                multiple 
+              <Button
+                variant='outlined'
+                color='inherit'
+                size='medium'
                 style={{
-                  display: 'none',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '100%',
+                  height: '40px',
+
                 }}
-              />
-            </Button> 
+                onClick={handleupload}
+              >
+
+                Upload your files to Metafortess
+              </Button>
+
+            </Typography>
+            <label htmlFor='fileInput' >
+              <Button
+                style={
+                  {
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: '20px',
+                    width: '100%',
+                    height: '100px',
+                  }
+                }
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                variant='outlined' color='inherit' size='medium' component="label">
+                Choose your files
+                <input
+                  type="file"
+                  name="files"
+                  id="file"
+                  onChange={handleFileInputChange}
+                  className="inputfile"
+                  multiple
+                  style={{
+                    display: 'none',
+                  }}
+                />
+              </Button>
+              {
+                upload && (
+                  <div >
+                    <LinearProgressWithLabel value={uploadprogress} />
+                      <Typography variant="h6" component="h2">
+                     uploading {loadingdata} 
+                      </Typography>
+                    </div>
+               
+
+                )
+              }
             </label>
-        {
-          <div
-          style={
             {
-              overflow:'scroll',
-              height:'200px',
-              overflowX:'hidden',
+              <div
+                style={
+                  {
+                    overflow: 'scroll',
+                    height: '200px',
+                    overflowX: 'hidden',
+                  }
+                }
+              >
+                {
+                  selectedFile.map((file) => (
+                    <div key={file.name}>
+                      <p>{file.name}</p>
+                    </div>
+
+                  ))
+                }
+              </div>
+
             }
-          }
-          >
-          {
-          selectedFile.map((file) => (
-            <div key={file.name}>
-              <p>{file.name}</p>
-            </div>
-
-          ))
-          }
-        </div>
-
-        }
           </Box>
         </Modal>
       )}
+     
     </Box>
 
   );

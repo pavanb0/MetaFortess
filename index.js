@@ -12,8 +12,9 @@ const nodeMailer = require('nodemailer');
 const cookieParser = require('cookie-parser');
 const ip = otpHandler.getIpAddress();
 const session = require('express-session');
-
-
+const multer = require('multer');
+const path = require('path');
+const imagesize = require('image-size');
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
     return session;
@@ -23,10 +24,11 @@ const sessions=()=>{
 
 const app = express();
 const port = 3030;
+const ips = '192.168.0.104'
 
 app.use(cors(
     {
-        origin: 'http://192.168.0.104:3000',
+        origin: `http://${ips}:3000`,
         credentials: true
     }
 ));
@@ -34,7 +36,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser())  
-
+app.use(
+    express.static('UserData')
+)
 
 const db = new sqlite3.Database('./Meta.db', (err) => {
     if (err) {
@@ -43,6 +47,124 @@ const db = new sqlite3.Database('./Meta.db', (err) => {
     console.log('Connected to the Meta database.');
     // logs.addlogs('Connected to the Meta database.');
 });
+// create UserData folder if not exists
+if (!fs.existsSync('./UserData')) {
+    fs.mkdirSync('./UserData');
+    console.log('UserData folder created');
+}
+
+app.get('/images',(req,res)=>{
+    const {email,password} = req.headers;
+//    check eamil and password
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            if (!result) {
+                logs.addlogs('Passwords do not match');
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            const userImagesDir = path.join(__dirname, 'UserData', email, 'images');
+            const userImages = readUserImages(userImagesDir,email);
+            res.json(userImages);
+            // res.status(200).json({ name: row.name });
+        });
+    }
+    )
+})
+
+function readUserImages(userImagesDir,email) {
+try{
+    const imagefiles = fs.readdirSync(userImagesDir);
+    return imagefiles.map((imagefile) => {
+        const imagepath = path.join(userImagesDir, imagefile);
+        const stats = fs.statSync(imagepath);
+        const dimensions = imagesize(imagepath);
+        const width = dimensions.width;
+        const height = dimensions.height;
+        
+        return {
+            src: `http://${ips}:3030/${email}/images/${imagefile}`,
+            width:Math.round(width),
+            height:Math.round(height),
+        };
+    });
+}catch(err){
+    console.log(err);
+    return [];
+}
+
+}
+
+
+const storage = multer.diskStorage(
+    {
+        destination: (req, file, cb) => {
+            cb(null, `./UserData/${req.headers['email']}`);
+        }
+    },
+    {
+        filename: (req, file, cb) => {
+            const uniquename = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, file.fieldname + '-' + uniquename + path.extname(file.originalname));
+        }
+    }
+);
+const upload = multer({ dest: `./UserData/` });
+
+// const upload = multer({ dest: `./UserData/` });
+app.post('/upload',upload.any(),(req,res)=>{
+    
+    
+    req.files.forEach((file)=>{
+        console.log(file);
+        const {email,password} = req.headers;
+        console.log(email,password);
+        console.log('Uploaded file name is '+file.originalname);
+        console.log('File size:', file.size);
+        console.log('File type:', file.mimetype);
+        console.log('File destination:', file.destination);
+        console.log('File path:', file.path);
+        console.log('--------------------------');
+        if(file.mimetype.includes('image')){
+            fs.rename(file.path,`./UserData/${email}/images/${file.originalname}`,(err)=>{
+                if(err){
+                    console.log(err);
+                }
+                console.log('File moved successfully');
+            })
+        }else if(file.mimetype.includes('video')){
+            fs.rename(file.path,`./UserData/${email}/videos/${file.originalname}`,(err)=>{
+                if(err){
+                    console.log(err);
+                }
+                console.log('File moved successfully');
+            })
+        }else{
+            fs.rename(file.path,`./UserData/${email}/files/${file.originalname}`,(err)=>{
+                if(err){
+                    console.log(err);
+                }
+                console.log('File moved successfully');
+            }
+            )
+        }
+        
+    })
+    res.status(200).json({message:'File uploaded successfully'});
+    
+    
+})
+
 
 
 function createuserdir(email){

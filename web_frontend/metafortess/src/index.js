@@ -7,14 +7,13 @@ import Signup from './screens/Signup';
 import Login from './screens/login'; // Make sure the filename is "Login.js" with a capital "L".
 import Forgotpass from './screens/forgotpass';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Gallary from './screens/Gallary';
-
+import Gallarys from './screens/Gallarys';
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/gallary" element={<Gallary />} />
+        <Route path="/gallary" element={<Gallarys />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgotpass" element={<Forgotpass />} />
