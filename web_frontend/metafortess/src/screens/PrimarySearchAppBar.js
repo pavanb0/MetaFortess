@@ -4,7 +4,6 @@ import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
 import InputBase from '@mui/material/InputBase';
 import Badge from '@mui/material/Badge';
 import MenuItem from '@mui/material/MenuItem';
@@ -18,6 +17,23 @@ import { Button } from '@mui/material';
 import BackupIcon from '@mui/icons-material/Backup';
 import axios from 'axios';
 import LinearProgressWithLabel from '@mui/material/LinearProgress';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+
+import FolderIcon from '@mui/icons-material/Folder';
+import CollectionsIcon from '@mui/icons-material/Collections';
+import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
+import { Typography } from '@mui/material';
+
+
+
+
+
 // import CircularProgress from '@mui/material/CircularProgress';
 const sessions = require('./sessions');
 const localip = require('../localip');
@@ -62,7 +78,11 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function PrimarySearchAppBar() {
+export default function PrimarySearchAppBar(
+  {
+    setImage,setVideo,setFile
+  }
+) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
   const [modal, setModal] = React.useState(false);
@@ -72,6 +92,12 @@ export default function PrimarySearchAppBar() {
   const [upload, setpload] = React.useState(false);
   const [uploadprogress, setuploadprogress] = React.useState(0);
   const [loadingdata,setloadingdata] = React.useState('');
+  const [drawer, setDrawer] = React.useState(false);
+  
+
+  
+  
+  
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
     setModal(true);
@@ -86,8 +112,88 @@ export default function PrimarySearchAppBar() {
     handleMobileMenuClose();
   };
 
+  const [state, setState] = React.useState({
+    top: false,
+    left: false,
+    bottom: false,
+    right: false,
+  });
+
+  const toggleDrawer = (anchor, open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+
+    setState({ ...state, [anchor]: open });
+  };
+
+  
+
+  const handleToggleDrawer = () => {
+    setDrawer(!drawer);
+
+  
+  }
+  const list = (anchor) => (
+    <Box
+      sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 250 }}
+      role="presentation"
+      onClick={toggleDrawer(anchor, false)}
+      onKeyDown={toggleDrawer(anchor, false)}
+    >
+      <List>
+        {['Images', 'Videos', 'Files'].map((text, index) => (
+          <ListItem key={text} disablePadding>
+            <ListItemButton
+            onClick={
+              () => {
+                if (index === 0) {
+                  setImage(true);
+                  setVideo(false);
+                  setFile(false);
+                }
+                if (index === 1) {
+                  setImage(false);
+                  setVideo(true);
+                  setFile(false);
+                }
+                if (index === 2) {
+                  setImage(false);
+                  setVideo(false);
+                  setFile(true);
+                }
+              }
+            }
+            >
+              <ListItemIcon>
+                {index === 0 ? <CollectionsIcon /> : index === 1 ? <OndemandVideoIcon /> : <FolderIcon />}
+              </ListItemIcon>
+              <ListItemText primary={text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <Typography variant="h8" component="div" sx={{ p: 2 }}>
+        Pepole's
+      </Typography>
+      {/* <List>
+        {['All mail', 'Trash', 'Spam'].map((text, index) => (
+          <ListItem key={text} disablePadding>
+            <ListItemButton>
+              <ListItemIcon>
+                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+              </ListItemIcon>
+              <ListItemText primary={text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List> */}
+    </Box>
+  );
   const handleMobileMenuOpen = (event) => {
     setMobileMoreAnchorEl(event.currentTarget);
+ 
   };
   const styl = {
     position: 'absolute',
@@ -248,6 +354,7 @@ export default function PrimarySearchAppBar() {
             color="inherit"
             aria-label="open drawer"
             sx={{ mr: 2 }}
+            onClick={toggleDrawer('left', true)}
           >
             <MenuIcon />
           </IconButton>
@@ -433,7 +540,15 @@ export default function PrimarySearchAppBar() {
         </Modal>
       )}
      
+     <Drawer
+        anchor={'left'}
+        open={state['left']}
+        onClose={toggleDrawer('left', false)}
+      >
+      {list('left')}
+    </Drawer>
     </Box>
+    
 
   );
 }

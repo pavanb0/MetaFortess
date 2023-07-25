@@ -53,6 +53,108 @@ if (!fs.existsSync('./UserData')) {
     console.log('UserData folder created');
 }
 
+function readUserVideos(userVideosDir,email) {
+    try{
+        const videofiles = fs.readdirSync(userVideosDir);
+        return videofiles.map((videofile) => {
+            const videopath = path.join(userVideosDir, videofile);
+            const stats = fs.statSync(videopath);
+            const size = stats.size;
+            const duration = 0;
+            return {
+                src: `http://${ips}:3030/${email}/videos/${videofile}`,
+                size:Math.round(size/1000000),
+                duration:Math.round(duration),
+            };
+        });
+    }catch(err){
+        console.log(err);
+        return [];
+    }
+
+}
+
+function readUserFiles(userFilesDir,email) {
+    try{
+        const files = fs.readdirSync(userFilesDir);
+        return files.map((file) => {
+            const filepath = path.join(userFilesDir, file);
+            const stats = fs.statSync(filepath);
+            const size = stats.size;
+            return {
+                src: `http://${ips}:3030/${email}/files/${file}`,
+                size:Math.round(size/1000000),
+            };
+        });
+    }catch(err){
+        console.log(err);
+        return [];
+    }
+
+}
+
+app.get('/files',(req,res)=>{
+    const {email,password} = req.headers;
+//    check eamil and password
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            if (!result) {
+                logs.addlogs('Passwords do not match');
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            const userFilesDir = path.join(__dirname, 'UserData', email, 'files');
+            const userFiles = readUserFiles(userFilesDir,email);
+            res.json(userFiles);
+            // res.status(200).json({ name: row.name });
+        });
+    }
+    )
+}
+)
+
+
+
+app.get('/videos',(req,res)=>{
+    const {email,password} = req.headers;
+//    check eamil and password
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            if (!result) {
+                logs.addlogs('Passwords do not match');
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            const userVideosDir = path.join(__dirname, 'UserData', email, 'videos');
+            const userVideos = readUserVideos(userVideosDir,email);
+            res.json(userVideos);
+            // res.status(200).json({ name: row.name });
+        });
+    }
+    )
+})
+
+
 app.get('/images',(req,res)=>{
     const {email,password} = req.headers;
 //    check eamil and password
