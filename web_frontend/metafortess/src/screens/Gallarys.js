@@ -5,7 +5,7 @@ import Gallery from 'react-photo-gallery';
 import Carousel, { Modal, ModalGateway } from "react-images";
 import PrimarySearchAppBar from './PrimarySearchAppBar';
 import TemporaryDrawer from './TemporaryDrawer';
-import { Button } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import VideoComponent from './VideoComponent';
 import FileComponent from './FileComponent';
 
@@ -93,11 +93,14 @@ function Gallerys() {
           });
         }
         fetchvid();
-        const interval = setInterval(() => {
+       const interval = setInterval(() => {
           fetchvid();
         }
           , 5000);
         return () => clearInterval(interval);
+
+
+        
     }
     else if(files){
       const fetchfile =()=>{
@@ -118,12 +121,14 @@ function Gallerys() {
     }
 
 
-  }, []);
+  }, [images,videos,files]);
  
   const [openDrawer, setOpenDrawer] = useState(false);
   return (
     <>
-    <div >
+    <div 
+    
+    >
       <PrimarySearchAppBar 
       setImage={setImages}
       setVideo={setVideos}
@@ -133,16 +138,81 @@ function Gallerys() {
       (<Gallery photos={photos} onClick={openLightbox} />
       ):null}
       {videos ? (
-        <div>
-          {videurl.map((src, index) => (
-            <VideoComponent key={index} videoUrl={src} />
-          ))}
-        </div>
+        
+        <div
+       style={{marginTop:'20px',
+       display: 'flex',
+       flexWrap: 'wrap',
+       justifyContent: 'center',
+        width: '100%',
+      }}
+        >
+        
+        {videurl.map((video, index) => (
+          <div key={index}
+          style={
+            {
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '10px',
+              padding: '10px',
+              height: '250px',
+             
+
+            }
+          }
+          >
+            <video controls width="400">
+              <source src={video.src} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <p>Title: {video.title} </p>
+           
+            
+
+          </div>
+        ))}
+      </div>
+        
       ) : null}
       {files ? (
-        <div>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          width: '100%',
+          marginTop:'20px',
+        
+        }}>
           {fileurl.map((src, index) => (
-            <FileComponent key={index} fileUrl={src} />
+           <div key={index}
+           style={
+            {
+              
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '10px',
+                  padding: '10px',
+                  height: '250px',
+                  marginTop:'20px',
+                 
+    
+            }
+           }
+           >
+            <p>
+              Title : {src.filename}
+            </p>
+            <a
+            href={src.src}
+            >Download</a>
+
+           </div>
+
           ))}
         </div>
       ) : null}

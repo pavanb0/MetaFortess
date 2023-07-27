@@ -28,7 +28,7 @@ const ips = '192.168.0.104'
 
 app.use(cors(
     {
-        origin: `http://${ips}:3000`,
+        origin:[ `http://${ips}:3000`,`http://localhost:3000`],
         credentials: true
     }
 ));
@@ -65,6 +65,8 @@ function readUserVideos(userVideosDir,email) {
                 src: `http://${ips}:3030/${email}/videos/${videofile}`,
                 size:Math.round(size/1000000),
                 duration:Math.round(duration),
+                title:videofile,
+
             };
         });
     }catch(err){
@@ -84,6 +86,7 @@ function readUserFiles(userFilesDir,email) {
             return {
                 src: `http://${ips}:3030/${email}/files/${file}`,
                 size:Math.round(size/1000000),
+                filename:file,
             };
         });
     }catch(err){
