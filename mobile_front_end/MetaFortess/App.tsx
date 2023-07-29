@@ -9,8 +9,12 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Signup" component={Signup} />
-        <Stack.Screen name="IpWindow" component={IpWindow} />
+        <Stack.Screen name="Signup"
+        options={{headerShown:false}}
+        component={Signup} />
+        <Stack.Screen name="IpWindow"
+        options={{headerShown:false}}
+        component={IpWindow} />
       </Stack.Navigator>
     </NavigationContainer>
 
