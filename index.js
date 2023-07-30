@@ -15,6 +15,8 @@ const session = require('express-session');
 const multer = require('multer');
 const path = require('path');
 const imagesize = require('image-size');
+const os = require('os');
+
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
     return session;
@@ -126,6 +128,11 @@ app.get('/files',(req,res)=>{
 }
 )
 
+app.get('/auth',(req,res)=>{
+    const osname= os.hostname();
+    res.json({osname:osname});
+    res.status(200);
+})
 
 
 app.get('/videos',(req,res)=>{
