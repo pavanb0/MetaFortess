@@ -8,7 +8,7 @@ import { StyleSheet } from "react-native";
 import { TextInput,Text } from "react-native-paper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 // import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { AsyncStorage } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 
@@ -124,6 +124,23 @@ function Login({
             Dont't have an account? Signup
           </Text>
 
+        </TouchableOpacity>
+        <TouchableOpacity
+        onPress={
+          async () => {
+            await AsyncStorage.removeItem("ip");
+            navigation.navigate("Holdscreen");
+          }
+        }
+
+        >
+          <Text
+          style={{
+            color: "#1976d2",
+          }}
+            >
+            Change server?
+          </Text>
         </TouchableOpacity>
       </View>
 

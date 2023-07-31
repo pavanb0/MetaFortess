@@ -47,12 +47,13 @@ function Signup({navigation})
   const [password, setPassword] = React.useState("");
   const [name, setName] = React.useState("");
   const [submit, setSubmit] = React.useState(false);
-  const [iperror, setIperror] = React.useState(false);
-  const [ip, setIp] = React.useState("");
-  
-  const handleSignup = () => {
+  async function getip(){
+    const ip = await AsyncStorage.getItem("ip");
+    return ip;
+  }
 
 
+  const handleSignup = async () => {
     setSubmit(true);
     if(!emailRegex.test(email) || email.length === 0 || password.length === 0 || name.length === 0){
       ToastAndroid.show("Please enter a valid data", ToastAndroid.SHORT);
@@ -62,43 +63,26 @@ function Signup({navigation})
       }, 1000);
       return;
     }
+    const ip = await getip();
+    axios.post(`http://${ip}}:3030/signp`, { name,email, password }, { withCredentials: true })
+      .then(
+        async (res) => {
+        }
+      ) 
+      .catch((err) => {
+        ToastAndroid.show(err.response.error, ToastAndroid.SHORT);
+
+      });
+
   }
-  useLayoutEffect(() => {
-    const getip = async () => {
-      try {
-        const ip = await AsyncStorage.getItem('ip');
-        if(ip !== null) {
-          setIp(ip);
-        }
-        else {
-          setIperror(true);
-        }
-      } catch(e) {
-        console.log(e);
-      }
-    }
-    getip();
-
-
-  },[]);
+  
 
 
 
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={styles.upperwindow} >
-      {iperror && (
-        <>
-        <View style={{ width: "100%", display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-        <Text style={{color: '#cb0000', fontSize: 20, fontWeight: 'bold',}}>Server Id not Found </Text>
-        </View>   
-        <View style={{ width: "100%", display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}>
-        <Text style={{color: '#cb0000', fontSize: 20, fontWeight: 'bold',}}>Please add Server Id in Settings </Text>
-        </View>       
-        </>
-      )}
-      </View>
+
 
       
       <View style={styles.container}>
@@ -193,6 +177,24 @@ function Signup({navigation})
           </Text>
 
         </TouchableOpacity>
+        <TouchableOpacity
+        onPress={
+          async () => {
+            await AsyncStorage.removeItem("ip");
+            navigation.navigate("Holdscreen");
+          }
+        }
+
+        >
+          <Text
+          style={{
+            color: "#1976d2",
+          }}
+            >
+            Change server?
+          </Text>
+        </TouchableOpacity>
+        
       </View>
 
     </GestureHandlerRootView>
