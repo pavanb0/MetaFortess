@@ -64,15 +64,38 @@ function Signup({navigation})
       return;
     }
     const ip = await getip();
-    axios.post(`http://${ip}}:3030/signp`, { name,email, password }, { withCredentials: true })
-      .then(
-        async (res) => {
-        }
-      ) 
-      .catch((err) => {
-        ToastAndroid.show(err.response.error, ToastAndroid.SHORT);
+    // console.log(name,email,password)
+    axios.post(`http://${ip}:3030/signup`, {name,email,password})
+    .then(async (res)=>{
 
-      });
+        AsyncStorage.setItem("email", email);
+        AsyncStorage.setItem("password", password);
+        ToastAndroid.show("Signup successful", ToastAndroid.SHORT);
+        navigation.navigate("Login");
+
+        Vibration.vibrate();
+
+        setSubmit(false);
+    })
+    .catch((err)=>{
+      console.log(err);
+      if (err.response.status === 409) {
+        ToastAndroid.show("Email already exists", ToastAndroid.SHORT);
+        Vibration.vibrate();
+        setSubmit(false);
+      }
+      if (err.response.status === 500) {
+        ToastAndroid.show("Server error", ToastAndroid.SHORT);
+        Vibration.vibrate();
+        setSubmit(false);
+      }else{
+      ToastAndroid.show("Signup failed", ToastAndroid.SHORT);
+      Vibration.vibrate();
+      setSubmit(false);
+  }})
+
+
+
 
   }
   
