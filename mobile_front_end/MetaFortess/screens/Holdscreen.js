@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import QRCodeModal from './QRCodeModal';
 import { Modal, Portal, PaperProvider } from 'react-native-paper';
@@ -157,15 +158,17 @@ function Holdscreen({ navigation }) {
                 style={{
                     backgroundColor: "#dcebde",
                     borderColor: "#1976d2",
+                    alignItems: "center",
+                    justifyContent: "center",
             
                 }}
                 onPress={
                   ()=>{setqr(!qr)}
                 }
             >
-  
-                <Icon name="qr-code-scanner" size={45} color="#1976d2" />
-           
+                <MaterialCommunityIcons name="line-scan" size={45} color="#1976d2" />
+                {/* <Icon name="qr-code-scanner" size={45} color="#1976d2" /> */}
+                {/* <Text style={{fontSize:45}}>📷</Text> */}
             </TouchableOpacity>
         </View> 
             <TouchableOpacity

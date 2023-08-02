@@ -6,7 +6,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { StyleSheet } from "react-native";
 import { TextInput,Text,Banner } from "react-native-paper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
