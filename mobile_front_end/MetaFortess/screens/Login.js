@@ -1,7 +1,7 @@
 
 import React,{useLayoutEffect} from "react";
 import {  ToastAndroid } from "react-native";
-import { Button } from "react-native-paper";
+import { ActivityIndicator, Button } from "react-native-paper";
 import { View,Vibration } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { StyleSheet } from "react-native";
@@ -96,7 +96,7 @@ function Login({
       if (email && password) {
         setEmail(email);
         setPassword(password);
-        handleLogin();
+        handleLogin;
       }
     }
     getIp();
@@ -156,11 +156,16 @@ function Login({
         onPress ={handleLogin}
 
         >
+          <ActivityIndicator 
+          style={{ display: submit ? "flex" : "none" }}
+          animating={submit} color="#1976d2" />
+
             <Text
             style={{
               color: "#1988d5",
               textAlign: "center",
               fontSize: 15,
+              display: submit ? "none" : "flex"
             }}
             >Login </Text>
         </TouchableOpacity> 
