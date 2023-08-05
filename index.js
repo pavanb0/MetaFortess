@@ -16,6 +16,8 @@ const multer = require('multer');
 const path = require('path');
 const imagesize = require('image-size');
 const os = require('os');
+const diskinfo = require('node-disk-info');
+
 
 const sessions=()=>{
     const session = crypto.randomBytes(32).toString('hex');
@@ -326,6 +328,67 @@ function isuserindb(uname,pass)
     }
     
 
+app.get('/storage',(req,res)=>{
+    const email = req.headers['email'];
+    const password = req.headers['password'];
+    // console.log(email,password,'hello');
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+        }
+        if (!row) {
+            // Email doesn't exist
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        // Email exists
+        // Compare the password given by the user and the password in the database
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+            }
+            if (!result) {
+                // Passwords don't match
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            // Passwords match
+            // console.log('Passwords match');
+            const freememory = os.freemem();
+            const totalmemory = os.totalmem();
+            const disks = diskinfo.getDiskInfoSync();
+            let totalsysstorage = 0;
+            let freesysstorage = 0;
+            disks.forEach((disk)=>{
+                totalsysstorage += disk.blocks;
+                freesysstorage += disk.available;
+            })
+            const totalphotos = fs.readdirSync(`./UserData/${email}/images`).length;
+            const totalvideos = fs.readdirSync(`./UserData/${email}/videos`).length;
+            const totalfiles = fs.readdirSync(`./UserData/${email}/files`).length;
+
+
+
+            const response ={
+                freememory:formatBytes(freememory),
+                totalmemory:formatBytes(totalmemory),
+                freesysstorage:formatBytes(freesysstorage),
+                totalsysstorage:formatBytes(totalsysstorage),
+                totalphotos:totalphotos,
+                totalvideos:totalvideos,
+                totalfiles:totalfiles
+                
+            }
+            res.json(response).status(200);
+            // res.status(200).json({ name: row.name });
+        });
+    });
+})
+
+function formatBytes(bytes) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes === 0) return '0 Byte';
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
+}
 
 app.get('/gallary',(req,res)=>{
 
