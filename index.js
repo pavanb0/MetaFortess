@@ -170,11 +170,11 @@ app.get('/videos',(req,res)=>{
 app.get('/images',(req,res)=>{
     const {email,password} = req.headers;
 //    check eamil and password
-    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
-        if (err) {
-            console.error('Error querying database:', err.message);
-            return res.status(500).json({ error: 'Internal Server Error' });
-        }
+db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+    if (err) {
+        console.error('Error querying database:', err.message);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
         if (!row) {
             return res.status(401).json({ error: 'Incorrect email or password' });
         }
@@ -189,7 +189,8 @@ app.get('/images',(req,res)=>{
             }
             const userImagesDir = path.join(__dirname, 'UserData', email, 'images');
             const userImages = readUserImages(userImagesDir,email);
-            res.json(userImages);
+            res.json(userImages).status(200);
+            console.log('userImages sent to client');
             // res.status(200).json({ name: row.name });
         });
     }
@@ -395,7 +396,7 @@ app.get('/gallary',(req,res)=>{
     // const uname = req.headers['uname'];
     const email = req.headers['email'];
     const password = req.headers['password'];
-    console.log(email,password,'hello');
+    // console.log(email,password,'hello');
     db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
         if (err) {
             console.error('Error querying database:', err.message);

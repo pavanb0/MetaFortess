@@ -1,5 +1,12 @@
+// Example of Grid Image Gallery in React Native
+// https://aboutreact.com/grid-image-gallery/
 
+// import React in our code
 import React, {useState, useEffect} from 'react';
+import axios from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicon from 'react-native-vector-icons/Ionicons';
+// import all the components we are going to use
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,102 +17,68 @@ import {
   Modal,
 } from 'react-native';
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+//import FastImage
 import FastImage from 'react-native-fast-image';
-import axios from 'axios';
+
+const getIp = async () => {
+    const ip = await AsyncStorage.getItem('ip')
+    return ip
+}
+const getEmail = async () => {
+    const email = await AsyncStorage.getItem('email')
+    return email
+}
+const getPassword = async () => {
+    const password = await AsyncStorage.getItem('password')
+    return password
+}
 
 
 const Photos = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
   const [imageuri, setImageuri] = useState('');
   const [
     modalVisibleStatus, setModalVisibleStatus
   ] = useState(false);
   const [dataSource, setDataSource] = useState([]);
-
   const [photos, setPhotos] = useState([]);
-  const [ip, setIp] = useState("");
-  
 
-//   const getIp = async () => {
-//       const ip = await AsyncStorage.getItem("ip");
-//       setIp(ip);
-//   };
-//   const getheads = async () => {
-//       const email = await AsyncStorage.getItem("email");
-//       const password = await AsyncStorage.getItem("password");
-//         setEmail(email);
-//         setPassword(password);
-//   };
+//   return promise if got photos
 
-//     const getPhotos = async () => {
+    const getPhotos = async () => { 
+    try{
 
-//         const head = { 'email': email, 'password': password }
-//             if (ip == null || head.email == null || head.password == null) {
-//                 alert("Please Enter IP Address")
-//             }
-            
-//             axios.get(`http://${ip}:3030/images`, { headers: head })
-//                 .then((res) => {
-//                     setPhotos(res.data)
-//                     console.log(res.data)
-                
-//                 })
-//                 .catch((err) => {
-//                     console.log(err)
-//                 }
-//                 )
-//     }
-//     useEffect(async () => {
-        
-//         getIp();    
-//         getheads();
-//         getPhotos();
-//     }, [])
-    // console.log(photos)
-  
+        const ip = await getIp()
+        const email = await getEmail()
+        const password = await getPassword()
+        const url = `http://${ip}:3030/images`
+        const headers = { 'email': email, 'password': password }
+        axios.get(url, { headers: headers })
+            .then((res) => {
+                setPhotos(res.data)
+                let items = Array.apply(null, Array(res.data.length)).map((v, i) => {
+                    return {id: i, src: res.data[i].src};
+                    });
+                setDataSource(items);
+            })
 
 
-    // response
-//    const response = [{"height": 482, "src": "http://192.168.0.104:3030/google@google.com/images/Screenshot 2023-03-02 081134 - Copy.png", "width": 841},
-//      {"height": 255, "src": "http://192.168.0.104:3030/google@google.com/images/Screenshot 2023-03-05 224350.png", "width": 339}]
-//    const coderesponse =[{"id": 0, "src": "https://unsplash.it/400/400?image=1"}, {"id": 1, "src": "https://unsplash.it/400/400?image=2"}, {"id": 2, "src": "https://unsplash.it/400/400?image=3"}]
+    }catch(e){
+        console.log(e)
+    }
+}
 
-  useEffect(async () => {
-    const ip = await AsyncStorage.getItem("ip");
-    const email = await AsyncStorage.getItem("email");
-    const password = await AsyncStorage.getItem("password");
-    const head = { 'email': email, 'password': password }
-    axios.get(`http://${ip}:3030/images`, { headers: head })
-    .then((res) => {
-        setPhotos(res.data)
-        console.log(res.data)
-    })
+
+
+  useEffect(() => {
+
+    getPhotos()
     
-    let items = Array.apply(null, photos.length).map((v, i) => {
-      return {
-        id: i,
-        src: photos[i].src,
-      };
-    });
-    setDataSource(items);
+    // let items = Array.apply(null, Array(1)).map((v, i) => {
+    //     return {id: i, src: photos[i].src};
+    //     });
+    //     setDataSource(items);
+    
   }, []);
-
-    // useEffect(()=>{
-    //     let items = Array.apply(null,Array(photos.length)).map((v,i)=>{
-    //         return {
-    //             id: i,
-    //             src: photos[i].src
-    //         }
-    //     })
-    //     setPhotos(items);
-    //     // setDataSource(items);
-    // },[])
-
-
-
-  console.log(photos);
 
   const showModalFunction = (visible, imageURL) => {
     //handler to handle the click on image of Grid
@@ -138,19 +111,18 @@ const Photos = () => {
               onPress={() => {
                 showModalFunction(!modalVisibleStatus, '');
               }}>
-              <FastImage
-                source={{
-                  uri:
-                    'https://raw.githubusercontent.com/AboutReact/sampleresource/master/close.png',
-                }}
-                style={{width: 35, height: 35}}
-              />
+              <View style={{
+                width: 50,
+                height: 50,
+              }}>
+              <Ionicon name='close-circle-outline' size={50} color="#4F8EF7" />
+              </View>
             </TouchableOpacity>
           </View>
         </Modal>
       ) : (
         <View style={styles.container}>
-   
+  
           <FlatList
             data={dataSource}
             renderItem={({item}) => (
@@ -215,53 +187,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   closeButtonStyle: {
-    width: 25,
-    height: 25,
+    width: 30,
+    height: 30,
     top: 50,
-    right: 20,
+    right: 40,
     position: 'absolute',
   },
 });
-
-{/**    
-
-  const [photos, setPhotos] = useState([]);
-    const [ip, setIp] = useState("");
-    const head ={} 
-
-    const getIp = async () => {
-        const ip = await AsyncStorage.getItem("ip");
-        setIp(ip);
-    };
-    const getheads = async () => {
-        const email = await AsyncStorage.getItem("email");
-        const password = await AsyncStorage.getItem("password");
-        head.email = email;
-        head.password = password;
-    };
-
-
-    useEffect(async () => {
-        await getIp();
-        await getheads();
-        async function getPhotos() {
-            try {
-                const response = await axios.get(`http://${ip}:3030/photos`, { headers: head });
-                setPhotos(response.data);
-            } catch (e) {
-                console.log(e);
-            }
-        }
-        getPhotos();
-        // REFRESH EVERY 5 SECONDS
-        setInterval(() => {
-            getPhotos();
-        }
-        , 5000);
-        return () => clearInterval(interval);
-
-
-
-    }, [])
-
-*/}
