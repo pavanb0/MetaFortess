@@ -5,12 +5,15 @@ import { Text, View } from 'react-native-paper';
 import React from 'react';
 import Files from './HomeScreenComponents/Files';
 import Photos from './HomeScreenComponents/Photos';
-import Video from './HomeScreenComponents/Video';
+import Videos from './HomeScreenComponents/Videos';
 import Account from './HomeScreenComponents/Account';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 const Tab = createBottomTabNavigator();
 
 function HomeScreen() {
   return (
+    // <GestureHandlerRootView>
     <Tab.Navigator
       initialRouteName="Photos"
       screenOptions={{
@@ -29,9 +32,9 @@ function HomeScreen() {
       />
       <Tab.Screen
         name="Video"
-        component={Video}
+        component={Videos}
         options={{
-          tabBarLabel: 'Video',
+          tabBarLabel: 'Videos',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="video-outline" color={color} size={size} />
             ),
@@ -58,6 +61,7 @@ function HomeScreen() {
         }}
       />
     </Tab.Navigator>
+   
   );
 }
 

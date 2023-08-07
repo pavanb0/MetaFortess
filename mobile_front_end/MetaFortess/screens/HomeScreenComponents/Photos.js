@@ -70,13 +70,13 @@ const Photos = () => {
 
 
   useEffect(() => {
-
+// refresh photos every time we enter the page and every 10 seconds
     getPhotos()
-    
-    // let items = Array.apply(null, Array(1)).map((v, i) => {
-    //     return {id: i, src: photos[i].src};
-    //     });
-    //     setDataSource(items);
+    const interval = setInterval(() => {
+    getPhotos()
+    }, 10000);
+    return () => clearInterval(interval);
+
     
   }, []);
 
