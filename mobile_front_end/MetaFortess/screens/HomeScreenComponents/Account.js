@@ -1,5 +1,5 @@
 import React, { useLayoutEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Alert, Pressable, ToastAndroid } from "react-native";
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -26,6 +26,22 @@ const style = StyleSheet.create({
         width: "100%",
         height: "100%"
 
+    },
+    displaymodal:{
+        
+        display: "flex",
+        position: "absolute",
+        bottom: 0,
+
+        
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#282822",
+        borderRadius: 20,
+        
+        marginBottom: 42,
+        opacity: 0.8
     },
     usercontainer: {
         height: '45%',
@@ -95,7 +111,7 @@ function Account(props) {
     const [totalphotos, settotalphotos] = React.useState("");
     const [totalvideos, settotalvideos] = React.useState("");
     const [totalfiles, settotalfiles] = React.useState("");
-    const [modalVisible, setModalVisible] = React.useState(true);
+    const [modalVisible, setModalVisible] = React.useState(false);
     const [progress, setProgress] = React.useState(0.0);
     const [selectedFiles, setSelectedFiles] = React.useState([]);
 
@@ -144,40 +160,79 @@ function Account(props) {
     
     
 }, [])
-// increment progress bar
-React.useEffect(() => {
-    let interval
-    interval = setInterval(() => {
-        setProgress(progress => progress + 0.1);
-        // if progress bar is full destroy interval
-        if (progress >= 1) {
-            clearInterval(interval)
-        }
 
-    }, 1000);
-    return () => {
-        clearInterval(interval)
-    }
-}, [])
 
 
     
-        const handleUpload = async () => {
-            try {
-              const results = await DocumentPicker.pickMultiple({
+    const handleUpload = async () => {
+    // pick multiple files
+        try {
+            const results = await DocumentPicker.pick({
                 type: [DocumentPicker.types.allFiles],
-              });
-              setSelectedFiles(results);
-            } catch (error) {
-              if (DocumentPicker.isCancel(error)) {
-                // User cancelled the picker
-              } else {
-                throw error;
-              }
+                allowMultiSelection: true,
+            })
+            setSelectedFiles(results);
+        } catch (err) {
+            if (DocumentPicker.isCancel(err)) {
+                // User cancelled the picker, exit any dialogs or menus and move on
+            } else {
+                throw err;
             }
-          };
-          
-    
+        }
+    }
+        //   console.log(selectedFiles)
+    const handleServerUpload = async () => {
+        try{
+            const form = new FormData();
+            selectedFiles.forEach((file) => {
+                form.append("files", file);
+            });
+            let useremail = ""
+            let password = ""
+            let ip = ""
+            let headers = {}
+
+            async function getStorage() {    
+            useremail = await AsyncStorage.getItem("email")
+            password = await AsyncStorage.getItem("password")
+            ip = await AsyncStorage.getItem("ip")
+            headers = { 'email': useremail, 'password': password }
+            }
+            getStorage().then(async () => {
+            const res = await axios.post(`http://${ip}:3030/upload`, form, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'email': useremail,
+                    'password': password
+                },
+                onUploadProgress: (progressEvent) => {
+                    const { loaded, total } = progressEvent;
+                    let percent = Math.floor((loaded * 100) / total)
+                    console.log(`${loaded}kb of ${total}kb | ${percent}%`)
+
+                    if (percent < 100) {
+                        setProgress(percent / 100)
+                    }
+
+                }
+            }).catch((e) => {
+                ToastAndroid.show("Internal Server Error", ToastAndroid.SHORT)
+                setProgress(0.0)
+                setModalVisible(false)
+                setSelectedFiles([])
+            })
+            console.log(res.data)
+            setProgress(0.0)
+            setModalVisible(false)
+            setSelectedFiles([])
+            })
+
+        }catch(e){
+            console.log(e)
+       
+
+        }
+    }
 
 
 
@@ -243,23 +298,34 @@ React.useEffect(() => {
                             color: "#4F8EF7",
                         }}>Email: {useremail}</Text>
                     </View>
-                    {modalVisible ?
-                    <View style={{
-                
-                        display: "flex",
-                        position: "absolute",
-                        bottom: 0,
 
-                        
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: "#282822",
-                        borderRadius: 20,
-                        
-                        marginBottom: 42,
-                        opacity: 0.8
-                    }}>
+                    {modalVisible ? null :
+                        <View style={{...style.displaymodal,padding:5}}>
+                            <TouchableOpacity
+                            onPress={ async() => {
+                                if(selectedFiles.length<1){
+                                    ToastAndroid.show("No files selected", ToastAndroid.SHORT)
+                                }
+                                else{
+                                    setModalVisible(true)
+                                    await handleServerUpload()
+                                }
+                            }}
+                            >
+                            <Text style={{
+                                fontSize: 20,
+                                color: "#4F8EF7",
+                            }}>
+                               {selectedFiles.length>0 ? ` ${selectedFiles.length} files selected click to upload`: `No files selected`}
+                                
+                            </Text>
+                            </TouchableOpacity>
+                        </View>
+                    }
+
+
+                    {modalVisible ?
+                    <View style={style.displaymodal}>
                         <Text style={{
                             fontSize: 20,
                             color: "#4F8EF7",
@@ -271,6 +337,7 @@ React.useEffect(() => {
 
                     </View> 
                    : null }
+          
 
 
                 </ImageBackground>
