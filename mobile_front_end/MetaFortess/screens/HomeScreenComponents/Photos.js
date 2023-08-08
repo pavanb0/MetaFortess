@@ -71,9 +71,12 @@ const Photos = () => {
 
   useEffect(() => {
 // refresh photos every time we enter the page and every 10 seconds
-    getPhotos()
+    async function FetchPhotos() {  
+  getPhotos()
+    }
+    FetchPhotos()   
     const interval = setInterval(() => {
-    getPhotos()
+    FetchPhotos()
     }, 10000);
     return () => clearInterval(interval);
 

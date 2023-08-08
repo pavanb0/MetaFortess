@@ -122,7 +122,7 @@ app.get('/files',(req,res)=>{
             }
             const userFilesDir = path.join(__dirname, 'UserData', email, 'files');
             const userFiles = readUserFiles(userFilesDir,email);
-            res.json(userFiles);
+            res.json(userFiles).status(200)
             // res.status(200).json({ name: row.name });
         });
     }
@@ -159,8 +159,47 @@ app.get('/videos',(req,res)=>{
             }
             const userVideosDir = path.join(__dirname, 'UserData', email, 'videos');
             const userVideos = readUserVideos(userVideosDir,email);
-            res.json(userVideos);
+            res.json(userVideos).status(200)
             // res.status(200).json({ name: row.name });
+        });
+    }
+    )
+})
+
+
+app.get('/delete',(req,res)=>{
+    const {email,password,url} = req.headers;
+//    check eamil and password
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            if (!result) {
+                logs.addlogs('Passwords do not match');
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            const spliturl = url.split('/').splice(3);
+            // delete the specified file
+            const userFilesDir = path.join(__dirname, 'UserData', spliturl[0],spliturl[1],spliturl[2]);
+            fs.unlink(userFilesDir, (err) => {
+                if (err) {
+                    console.error('Error deleting file:', err.message);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+                else{
+                    return res.status(200).json({success:'File Deleted'});
+                }
+            });
+
         });
     }
     )
@@ -428,7 +467,7 @@ app.get('/gallary',(req,res)=>{
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
     // checking if the email exists in the database
-    console.log(email,password);
+    // console.log(email,password);
     db.get( 'SELECT * FROM users WHERE email = ?', email,(err,row)=>{
         err ? console.log(err) : console.log(row)
         if (err) {

@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground } from "react-native";
+import React, { useLayoutEffect } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Alert } from "react-native";
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -8,6 +8,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { List } from "react-native-paper";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import {ProgressBar } from "react-native-paper";
+import * as Progress from 'react-native-progress';
+import DocumentPicker from 'react-native-document-picker';
 
 const width = Dimensions.get('window').width;
 const height = Dimensions.get('window').height;
@@ -49,6 +52,21 @@ const style = StyleSheet.create({
         zIndex: 0
 
     },
+    upload: {
+        // align left
+        position: "absolute",
+        top: 10,
+        left: 10,
+        marginTop: 10,
+        borderColor: "#4F8EF7",
+        borderRadius: 50,
+
+        padding: 5,
+        zIndex: 0
+
+    },
+    
+
     user: {
         borderWidth: 2,
         border: "solid",
@@ -77,19 +95,22 @@ function Account(props) {
     const [totalphotos, settotalphotos] = React.useState("");
     const [totalvideos, settotalvideos] = React.useState("");
     const [totalfiles, settotalfiles] = React.useState("");
+    const [modalVisible, setModalVisible] = React.useState(true);
+    const [progress, setProgress] = React.useState(0.0);
+    const [selectedFiles, setSelectedFiles] = React.useState([]);
 
-
-    
-
-    React.useEffect( async() => {
-        const useremail = await AsyncStorage.getItem("email")
-        const password = await AsyncStorage.getItem("password")
-        const ip = await AsyncStorage.getItem("ip")
-        setuseremail(useremail)
-        const headers = { 'email': useremail, 'password': password }
-
+    React.useEffect( () => {
+        
         async function getStorage() {
+        
+            const useremail = await AsyncStorage.getItem("email")
+            const password = await AsyncStorage.getItem("password")
+            const ip = await AsyncStorage.getItem("ip")
+            setuseremail(useremail)
+            const headers = { 'email': useremail, 'password': password }
+
             try {
+               
                 axios.get(`http://${ip}:3030/gallary`, { headers: headers })
                     .then((res) => {
                         setuser(res.data.name)
@@ -112,18 +133,55 @@ function Account(props) {
                 console.log(e)
             }
         }
-        // call the function every 5 seconds
-        setInterval(() => {
-
+    getStorage()
+    let Timeout 
+    Timeout = setTimeout(() => {
         getStorage()
-        }, 5000)
-        // clear
-        return () => clearInterval(interval);
+    }, 1000*15);
+    return () => {
+        clearTimeout(Timeout)
+    }
+    
+    
+}, [])
+// increment progress bar
+React.useEffect(() => {
+    let interval
+    interval = setInterval(() => {
+        setProgress(progress => progress + 0.1);
+        // if progress bar is full destroy interval
+        if (progress >= 1) {
+            clearInterval(interval)
+        }
 
+    }, 1000);
+    return () => {
+        clearInterval(interval)
+    }
+}, [])
 
-    }, [])
 
     
+        const handleUpload = async () => {
+            try {
+              const results = await DocumentPicker.pickMultiple({
+                type: [DocumentPicker.types.allFiles],
+              });
+              setSelectedFiles(results);
+            } catch (error) {
+              if (DocumentPicker.isCancel(error)) {
+                // User cancelled the picker
+              } else {
+                throw error;
+              }
+            }
+          };
+          
+    
+
+
+
+
     return (
         <View style={style.mainContainer}>
 
@@ -151,6 +209,17 @@ function Account(props) {
                     >
                         <Ionicons name='log-out-outline' size={50} color="#4F8EF7" />
                     </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={style.upload}
+                        onPress={async () => {
+                           await handleUpload()
+                        } }
+                    >
+                        <Ionicons name='cloud-upload-outline' size={50} color="#4F8EF7" />
+                    </TouchableOpacity>
+
+
                     <View style={style.user}>
                         <SimpleLineIcons name="user" size={50} color="#4F8EF7" />
                     </View>
@@ -174,6 +243,35 @@ function Account(props) {
                             color: "#4F8EF7",
                         }}>Email: {useremail}</Text>
                     </View>
+                    {modalVisible ?
+                    <View style={{
+                
+                        display: "flex",
+                        position: "absolute",
+                        bottom: 0,
+
+                        
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "#282822",
+                        borderRadius: 20,
+                        
+                        marginBottom: 42,
+                        opacity: 0.8
+                    }}>
+                        <Text style={{
+                            fontSize: 20,
+                            color: "#4F8EF7",
+                        }}>Uploaded... {Math.round(progress*100)}%</Text>
+                        <Progress.Bar progress={progress} width={300}
+                        
+
+                        />
+
+                    </View> 
+                   : null }
+
 
                 </ImageBackground>
             </View>

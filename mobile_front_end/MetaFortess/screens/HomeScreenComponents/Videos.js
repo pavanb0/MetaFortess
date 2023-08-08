@@ -68,7 +68,14 @@ function Videos(props) {
         }
     }
     useEffect(() => {
+        async function FetchVideos() {
         getVideos()
+        }
+        FetchVideos()
+        const interval = setInterval(() => {
+            FetchVideos()
+        }, 1000*10);
+        return () => clearInterval(interval);
         // console.log(dataSource)
     }, [])
 
