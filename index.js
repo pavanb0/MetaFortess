@@ -190,6 +190,8 @@ app.get('/delete',(req,res)=>{
             const spliturl = url.split('/').splice(3);
             // delete the specified file
             const userFilesDir = path.join(__dirname, 'UserData', spliturl[0],spliturl[1],spliturl[2]);
+            console.log(userFilesDir,'\n',spliturl);
+            
             fs.unlink(userFilesDir, (err) => {
                 if (err) {
                     console.error('Error deleting file:', err.message);

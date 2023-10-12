@@ -6,7 +6,12 @@ import React, {useState, useEffect} from 'react';
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicon from 'react-native-vector-icons/Ionicons';
+// import ToastAndroid from 'react-native';
+import { ToastAndroid } from 'react-native';
 // import all the components we are going to use
+// MaterialCommunityIcons
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import {
   SafeAreaView,
   StyleSheet,
@@ -15,6 +20,7 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
+  Vibration,
 } from 'react-native';
 
 //import FastImage
@@ -43,6 +49,50 @@ const Photos = () => {
   const [photos, setPhotos] = useState([]);
 
 //   return promise if got photos
+  const deletephoto = async (url) => {
+    try{
+
+        const ip = await getIp()
+        const email = await getEmail()
+        const password = await getPassword()
+        const headers = { 'email': email, 'password': password, 'url': url }
+        const site = `http://${ip}:3030/delete`
+        axios.get(site, { headers: headers })
+        .then((res) => {
+          showModalFunction(!modalVisibleStatus, '');
+          
+          ToastAndroid.showWithGravity(
+              "Deleted",
+              ToastAndroid.SHORT,
+              ToastAndroid.CENTER
+              );
+          
+              Vibration.vibrate({pattern: [100, 200, 300], duration: 1000}) 
+            }).catch((err) => {
+              ToastAndroid.showWithGravity(
+                "Error",
+                ToastAndroid.SHORT,
+                ToastAndroid.CENTER
+                );
+                Vibration.vibrate(1000)
+              // what are the arguments for vibrate?
+              // vibrate(pattern, repeat)
+              // pattern: array of numbers
+              // repeat: boolean
+              // if repeat is true, it will loop the pattern
+              // if repeat is false, it will only vibrate once
+              // if repeat is not defined, it will loop the pattern
+              // if pattern is not defined, it will vibrate for 400ms
+
+          })
+           
+
+    }catch(e){
+        console.log(e)
+    }
+
+  }
+
 
     const getPhotos = async () => { 
     try{
@@ -109,8 +159,28 @@ const Photos = () => {
               }
             />
             <TouchableOpacity
+            activeOpacity={0.5}
+            onPress={async ()=>{
+              await deletephoto(imageuri)
+              
+
+            }}
+            style={styles.closeButtonStyle}
+              >
+                  <View style={{
+                width: 50,
+                height: 50,
+              }}>
+
+                 <MaterialCommunityIcons name='delete-outline' size={50} color="#4F8EF7" />
+              </View>
+        
+
+              </TouchableOpacity>
+
+            <TouchableOpacity
               activeOpacity={0.5}
-              style={styles.closeButtonStyle}
+              style={styles.deleteButtonStyle}
               onPress={() => {
                 showModalFunction(!modalVisibleStatus, '');
               }}>
@@ -118,7 +188,9 @@ const Photos = () => {
                 width: 50,
                 height: 50,
               }}>
+        
               <Ionicon name='close-circle-outline' size={50} color="#4F8EF7" />
+                 
               </View>
             </TouchableOpacity>
           </View>
@@ -189,11 +261,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  closeButtonStyle: {
+  deleteButtonStyle: {
     width: 30,
     height: 30,
     top: 50,
     right: 40,
+    position: 'absolute',
+  },
+  closeButtonStyle: {
+    width: 30,
+    height: 30,
+    top: 50,
+    left: 40,
     position: 'absolute',
   },
 });
