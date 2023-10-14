@@ -69,12 +69,7 @@ const Photos = () => {
           
               Vibration.vibrate({pattern: [100, 200, 300], duration: 1000}) 
             }).catch((err) => {
-              ToastAndroid.showWithGravity(
-                "Error",
-                ToastAndroid.SHORT,
-                ToastAndroid.CENTER
-                );
-                Vibration.vibrate(1000)
+              console.log(err)
               // what are the arguments for vibrate?
               // vibrate(pattern, repeat)
               // pattern: array of numbers

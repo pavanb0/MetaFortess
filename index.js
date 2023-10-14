@@ -130,6 +130,45 @@ app.get('/files',(req,res)=>{
 }
 )
 
+app.get('/aifiles',(req,res)=>{
+    const {email,password} = req.headers;
+    // if (email == null || password == null ){res.status(401).json({err:"no password or username"})}
+    
+    db.get('SELECT * FROM users WHERE email = ?', email, (err, row) => {
+        if (err) {
+            console.error('Error querying database:', err.message);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (!row) {
+            return res.status(401).json({ error: 'Incorrect email or password' });
+        }
+        bcrypt.compare(password, row.password, (err, result) => {
+            if (err) {
+                console.error('Error comparing passwords:', err.message);
+                return res.status(500).json({ error: 'Internal Server Error Missing Password?' });
+            }
+            if (!result) {
+                logs.addlogs('Passwords do not match');
+                return res.status(401).json({ error: 'Incorrect email or password' });
+            }
+            const aiOut =  path.join(__dirname,'userData/report.json');
+            try{
+                const ai_file_out = fs.readFileSync(aiOut,'utf8');
+                const aiFileJson = JSON.parse(ai_file_out);
+                return res.json(aiFileJson).status(200)
+
+            }catch{
+                return res.status(401).json({error:"inernal server error try again"})
+            }
+            
+        });
+    }
+    )
+
+});
+    
+
+
 app.get('/auth',(req,res)=>{
     const osname= os.hostname();
     res.json({osname:osname});

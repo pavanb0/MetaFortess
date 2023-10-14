@@ -56,5 +56,6 @@ def scan_dir():
                     print(text)
         with open('report.json', 'w') as outfile:
             json.dump(data, outfile,indent=4)
-
-scan_dir()
+while True:
+    scan_dir()
+    time.sleep(15)

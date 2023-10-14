@@ -32,7 +32,7 @@ function HomeScreen() {
     >
       <Tab.Screen
         name= {screenName}
-        component={ (drawerOpen) ? (Photos):(Aiscreen)}
+        component={() => (drawerOpen ? <Photos /> : <Aiscreen Search={searchQuery} />)}
         options={{
           tabBarLabel: screenName,
           tabBarIcon: ({ color, size }) => (
