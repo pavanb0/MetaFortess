@@ -8,7 +8,7 @@ const AiscreenSearchBar = ({searchQuery,setSearchQuery}) => {
 
   return (
     <Searchbar
-      placeholder="Search"
+      placeholder="good morning"
       onChangeText={onChangeSearch}
       value={searchQuery}
     />

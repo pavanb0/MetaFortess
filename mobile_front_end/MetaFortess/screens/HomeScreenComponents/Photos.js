@@ -132,6 +132,7 @@ const Photos = () => {
     //handler to handle the click on image of Grid
     //and close button on modal
     setImageuri(imageURL);
+    console.log(imageURL)
     setModalVisibleStatus(visible);
   };
 
